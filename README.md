@@ -12,4 +12,4 @@ Source code for the software part of the project (Linux)
 |   PG7    |GPIO_121| P16 |   DATA7  | 
 |   PG8    |GPIO_122| R14 |   DATA8  |
 |   PG9    |GPIO_123| N16 |   DATA9  |
-|  PH14    |GPIO_112| N12 |  IRQ_RSP |
+|  PH14    |GPIO_113| P9  |  IRQ_RSP |
