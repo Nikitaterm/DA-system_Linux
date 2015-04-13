@@ -17,4 +17,3 @@ build_driver:
 clean_driver:
 	@echo "Cleaning..."
 	cd driver && $(MAKE) clean
-

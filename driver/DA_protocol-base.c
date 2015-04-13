@@ -6,7 +6,7 @@
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Nikila Lazarev");
-MODULE_DESCRIPTION("DA_driver");
+MODULE_DESCRIPTION("DA_protocol driver");
 
 int module_start(void) {
 	int err;
