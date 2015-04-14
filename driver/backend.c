@@ -107,7 +107,7 @@ int configure_IRQ_RSP(void) {
     return 0;
 }
 
-u16 readData(void) {
+u16 getData(void) {
 	return ioread16(gpio_map + PG_DAT) & DATA_MASK;
 }
 
@@ -132,7 +132,7 @@ static irqreturn_t intr_handler( int irq, void *dev_id ) {
     status |= (1 << IRQ_RSP_PIN); // clear the flag
     iowrite32(status, gpio_map + PIO_INT_STATUS);
     //*************IRQ_LOGIC**************
-    printk("Data: %d\n", readData());
+    //printk("Data: %d\n", readData());
     //************************************
     return IRQ_HANDLED;
 

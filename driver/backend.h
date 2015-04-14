@@ -13,7 +13,7 @@
 int configure_DATABUS(void);  // Request and configure the data bus
 int configure_IRQ_RSP(void);  // Request and configure IRQ_RSP
 int map_GPIO(void);           // Map GPIO address space
-u16 readData(void);           // Read data from the data bus
+u16 getData(void);           // Read data from the data bus
 void free_spaces(void);       // Free all requested spaces
 
 #endif
