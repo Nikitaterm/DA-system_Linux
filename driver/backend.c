@@ -1,5 +1,7 @@
 #include "backend.h"
+#include "buff.h"
 
+#include <linux/circ_buf.h>
 #include <linux/interrupt.h>
 #include <linux/ioport.h>
 #include <asm/io.h>
@@ -31,11 +33,11 @@
 #define PIO_INT_CTL                0x210        // PIO interrupt control register
 #define PIO_INT_STATUS             0x214        // POI interrupt status register
 
-#define MSK_4                      0xF          // bit-mask 1111
-#define MSK_3                      0x7          // bit-mask 111
-#define MSK_2                      0x3          // bit-mask 11
+#define MSK_4                      0xF          // bit-mask 0b1111
+#define MSK_3                      0x7          // bit-mask 0b111
+#define MSK_2                      0x3          // bit-mask 0b11
 
-void* gpio_map;
+static void* gpio_map;
 static int dev_id;
 
 static irqreturn_t intr_handler( int irq, void *dev_id );
@@ -101,14 +103,7 @@ int configure_IRQ_RSP(void) {
     conf = ioread32(gpio_map +PIO_INT_CFG1);
     conf = (conf & ~(MSK_4 << 24)) | (EINT_P_ADG << 24);  // set positive adge
     iowrite32(conf, gpio_map + PIO_INT_CFG1);
-    conf = ioread32(gpio_map + PIO_INT_CTL);
-    conf |= (1 << IRQ_RSP_PIN); // enable the intr
-    iowrite32(conf, gpio_map + PIO_INT_CTL);
     return 0;
-}
-
-u16 getData(void) {
-	return ioread16(gpio_map + PG_DAT) & DATA_MASK;
 }
 
 static void free_GPIO(u32 offset, u32 size) {
@@ -116,26 +111,49 @@ static void free_GPIO(u32 offset, u32 size) {
 }
 
 static void finish_intr(void) {
-	u32 conf_w;
 	synchronize_irq(IRQ_);
-	conf_w = ioread32(gpio_map + PIO_INT_CTL);
-    conf_w &= ~(1 << IRQ_RSP_PIN); // disable the intr
-    iowrite32(conf_w, gpio_map + PIO_INT_CTL);
     free_irq(IRQ_, &dev_id);
 }
 
-static irqreturn_t intr_handler( int irq, void *dev_id ) {
+int startReading(void) {
+    int err;
+    u32 conf;
+    err = initBuff();
+    if (err) {
+        return err;
+    }
+    u32 status = ioread32(gpio_map + PIO_INT_STATUS);
+    status |= (1 << IRQ_RSP_PIN); // clear the flag
+    iowrite32(status, gpio_map + PIO_INT_STATUS);
+
+    conf = ioread32(gpio_map + PIO_INT_CTL);
+    conf |= (1 << IRQ_RSP_PIN); // enable the intr
+    iowrite32(conf, gpio_map + PIO_INT_CTL);
+    return 0;
+}
+
+void stopReading(void) {
+    u32 conf;
+    synchronize_irq(IRQ_);
+    conf = ioread32(gpio_map + PIO_INT_CTL);
+    conf &= ~(1 << IRQ_RSP_PIN); // disable the intr
+    iowrite32(conf, gpio_map + PIO_INT_CTL);
+    freeBuff();
+}
+
+u16 getData(void) {
+    return b_getData();
+}
+
+static irqreturn_t intr_handler(int irq, void *dev_id) {
 	u32 status = ioread32(gpio_map + PIO_INT_STATUS);
     if (!(status & (1 << IRQ_RSP_PIN))) {
     	return IRQ_NONE;
     }
     status |= (1 << IRQ_RSP_PIN); // clear the flag
     iowrite32(status, gpio_map + PIO_INT_STATUS);
-    //*************IRQ_LOGIC**************
-    //printk("Data: %d\n", readData());
-    //************************************
+    b_putData(ioread16(gpio_map + PG_DAT) & DATA_MASK);
     return IRQ_HANDLED;
-
 }
 
 int map_GPIO(void) {
