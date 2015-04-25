@@ -1,7 +1,6 @@
 #include "backend.h"
 #include "buff.h"
 
-#include <linux/circ_buf.h>
 #include <linux/interrupt.h>
 #include <linux/ioport.h>
 #include <asm/io.h>
@@ -33,6 +32,7 @@
 #define PIO_INT_CTL                0x210        // PIO interrupt control register
 #define PIO_INT_STATUS             0x214        // POI interrupt status register
 
+#define MSK_11                     0x7FF        // bit-mask 0b11111111111
 #define MSK_4                      0xF          // bit-mask 0b1111
 #define MSK_3                      0x7          // bit-mask 0b111
 #define MSK_2                      0x3          // bit-mask 0b11
@@ -44,11 +44,11 @@ static irqreturn_t intr_handler( int irq, void *dev_id );
 
 static int request_GPIO(u32 offset, u32 size) {
     if (check_region(PIO_BASE_ + offset, size)) {
-        printk("DA_driver: Allocation io ports at address %x failed. The region is busy!\n", PIO_BASE_ + offset);
+        printk("DA_driver: Allocation io ports at address %x failed. The region is busy.\n", PIO_BASE_ + offset);
         return -EBUSY;
     }
     if (request_region(PIO_BASE_ + offset, size, "DA_driver") == NULL) {
-        printk("DA_driver: IO request failed!\n");
+        printk("DA_driver: IO request failed.\n");
         return -EBUSY;
     }
     return 0;
@@ -58,37 +58,28 @@ int configure_DATABUS(void) {
 	int err;
 	u32 conf;
     err = request_GPIO(PG_DAT, DATABUS_DATA_SIZE);
-    if (err) {
-        return err;
-    }
+    if (err) goto ERR;
     err = request_GPIO(PG_CFG0, DATABUS_CONF_SIZE);
-    if (err) {
-        return err;
-    }
+    if (err) goto ERR;
     err = request_GPIO(PG_PULL0, DATABUS_PULLUP_SIZE);
-    if (err) {
-        return err;
-    }
+    if (err) goto ERR;
     iowrite32(0, gpio_map + PG_CFG0);  // set as input
     iowrite8(0, gpio_map + PG_CFG0 + 0x20);  // set as input
     conf = ioread32(gpio_map + PG_PULL0);
-    conf &= (0x7FF << 20);  // zero out bits
+    conf &= (MSK_11 << 20);  // zero out bits
     conf |= 0xAAAAA;  // set as pull down ([10] mode)
     iowrite32(conf, gpio_map + PG_PULL0);
     return 0;
+    ERR: return err;
 }
 
 int configure_IRQ_RSP(void) {
 	int err;
 	u32 conf;
 	err = request_GPIO(PH_DAT, IRQ_RSP_DATA_SIZE);
-    if (err) {
-        return err;
-    }
+    if (err) goto ERR;
 	err = request_GPIO(PH_CFG1, IRQ_RSP_CONF_SIZE);
-    if (err) {
-        return err;
-    }
+    if (err) goto ERR;
     conf = ioread32(gpio_map + PH_CFG1);
     conf = (conf & ~(MSK_3 << 24)) | (EINTx << 24);  // configure as an interrupt source
     iowrite32(conf, gpio_map + PH_CFG1);
@@ -98,12 +89,13 @@ int configure_IRQ_RSP(void) {
 	err = request_irq(IRQ_, intr_handler, IRQF_DISABLED, "DA_driver_interrupt", &dev_id);
     if (err) {
     	printk("DA_driver: request irq failed\n");
-        return err;
+        goto ERR;
     }
     conf = ioread32(gpio_map +PIO_INT_CFG1);
     conf = (conf & ~(MSK_4 << 24)) | (EINT_P_ADG << 24);  // set positive adge
     iowrite32(conf, gpio_map + PIO_INT_CFG1);
     return 0;
+    ERR: return err;
 }
 
 static void free_GPIO(u32 offset, u32 size) {
@@ -117,12 +109,12 @@ static void finish_intr(void) {
 
 int startReading(void) {
     int err;
-    u32 conf;
+    u32 conf, status;
     err = initBuff();
     if (err) {
         return err;
     }
-    u32 status = ioread32(gpio_map + PIO_INT_STATUS);
+    status = ioread32(gpio_map + PIO_INT_STATUS);
     status |= (1 << IRQ_RSP_PIN); // clear the flag
     iowrite32(status, gpio_map + PIO_INT_STATUS);
 

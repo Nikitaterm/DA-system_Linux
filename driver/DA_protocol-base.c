@@ -1,7 +1,5 @@
 #include "backend.h"
 
-#include <linux/string.h>
-
 #include <asm/uaccess.h>
 #include <linux/fs.h>
 #include <linux/init.h>
@@ -17,14 +15,12 @@ MODULE_DESCRIPTION("DA_protocol driver");
 static volatile u8 dev_opend = 0;
 
 static int dev_open(struct inode *inode, struct file *file) {
-    int err;
     if (dev_opend) {  // The device can be opend only ones
         return -EBUSY;
     }
     dev_opend++;
     try_module_get(THIS_MODULE);
-    err = startReading();
-    return err;
+    return startReading();
 }
 
 static int dev_release(struct inode *inode, struct file *file) {
@@ -34,13 +30,13 @@ static int dev_release(struct inode *inode, struct file *file) {
     return 0;
 }
 
-static ssize_t dev_read( struct file * file, char * buf,
-                        size_t count, loff_t *ppos ) {
+static ssize_t dev_read(struct file * file, char * buf,
+                        size_t count, loff_t *ppos) {
     char* info_str;
     u16 data;
     if( count < BUFF_LEN ) return -EINVAL;
     if( *ppos != 0 ) {
-        printk("DA_driver: file_pos != 0 (%d != 0)\n", *ppos);
+        printk("DA_driver: dev_read failed, file_pos != 0 (%d != 0).\n", (int)*ppos);
         return 0;
     }
     data = getData();
@@ -65,32 +61,27 @@ static struct miscdevice DA_dev = {
 };
 
 int module_start(void) {
-	int err;
-	err = map_GPIO();
-    if (err) {
-        return err;
-	}
+    int err;
+    err = map_GPIO();
+    if (err) goto ERR;
     err = configure_DATABUS();
-    if (err) {
-        return err;
-	}
-	err = configure_IRQ_RSP();
-	if (err) {
-        return err;
-	}
+    if (err) goto ERR;
+    err = configure_IRQ_RSP();
+    if (err) goto ERR;
     err = misc_register(&DA_dev);
     if (err) {
-        printk("DA_driver: device registration failed\n");
-        return err;
+        printk("DA_driver: device registration failed.\n");
+        goto ERR;
     }
-	printk("DA_driver:DEBUG: driver started\n");
+    printk("DA_driver:DEBUG: driver started.\n");
     return 0;
+    ERR: return err;
 }
 
 void module_stop(void) {
     free_spaces();
     misc_deregister(&DA_dev);
-    printk("DA_driver:DEBUG: driver finished\n");
+    printk("DA_driver:DEBUG: driver finished.\n");
     return;
 }
 
