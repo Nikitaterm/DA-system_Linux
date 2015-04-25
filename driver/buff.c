@@ -7,7 +7,7 @@
 #include <linux/spinlock.h>
 #include <linux/wait.h>
 
-#define BUFF_SIZE 512
+#define BUFF_SIZE 4096  //#TODO: dynamic change via ioctl
 
 typedef struct {
 	u16* data;
@@ -50,7 +50,7 @@ void b_putData(const u16 data_) {
         wake_up(&WaitQ);
         unlocked_ = true;
     } else {
-    	// #TODO: if the buffer is overflow?
+        // #TODO: if the buffer is overflow? Send some signal to a board!
     }
     spin_unlock(&producer_lock);
 }

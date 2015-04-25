@@ -138,6 +138,7 @@ u16 getData(void) {
 }
 
 static irqreturn_t intr_handler(int irq, void *dev_id) {
+    // #TODO: tell a device not to send data while the interrupt is being processed.
 	u32 status = ioread32(gpio_map + PIO_INT_STATUS);
     if (!(status & (1 << IRQ_RSP_PIN))) {
     	return IRQ_NONE;
