@@ -12,7 +12,11 @@ build_driver:
 	@echo "Building driver..."
 	cd driver && $(MAKE)
 	@echo "Moving into out/..."
-	mv driver/*.ko out/
+	if [ ! -d "out/driver" ]; then \
+	    mkdir out/driver; \
+	fi
+	cp driver/*.ko out/driver/
+	cp driver/DA_driver.sh out/driver/
 
 clean_driver:
 	@echo "Cleaning..."
