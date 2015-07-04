@@ -14,9 +14,15 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    qcustomplot.cpp
+    qcustomplot.cpp \
+    newsessiondialog.cpp \
+    session.cpp
 
 HEADERS  += mainwindow.h \
-    qcustomplot.h
+    qcustomplot.h \
+    newsessiondialog.h \
+    session.h \
+    messagehandler.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    newsessiondialog.ui
