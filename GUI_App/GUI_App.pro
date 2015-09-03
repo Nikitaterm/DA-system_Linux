@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
+CONFIG += c++11
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
@@ -15,14 +16,14 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     qcustomplot.cpp \
-    newsessiondialog.cpp \
-    session.cpp
+    session.cpp \
+    newsessiondialog.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
-    newsessiondialog.h \
     session.h \
-    messagehandler.h
+    messagehandler.h \
+    newsessiondialog.h
 
 FORMS    += mainwindow.ui \
     newsessiondialog.ui

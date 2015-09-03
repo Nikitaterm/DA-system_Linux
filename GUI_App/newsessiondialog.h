@@ -15,12 +15,17 @@ public:
     explicit NewSessionDialog(QWidget *parent = 0);
     ~NewSessionDialog();
 
+signals:
+    void newSession(QString name, QString dataFileLocation);
+
 private slots:
-    void onOk();
+    void dataFile_OnClick();
+    void ok_OnClick();
+    void cancel_OnClick();
 
 private:
     Ui::NewSessionDialog *ui;
-
+    QString dataFilename;
 };
 
 #endif // NEWSESSIONDIALOG_H

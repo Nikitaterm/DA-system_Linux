@@ -5,34 +5,43 @@
 #include <QString>
 #include <QScopedPointer>
 
-enum Status {
-    Active,
-    Stopped,
-    Closed
-};
-
-class Session
-{
+class Session {
 public:
-    bool create(QString name, QString datafile_location, QWidget *self);
-    bool open(QWidget *self);
+    Session() : status_(Closed) {
+    }
+    bool create(QString name, QString datafile_location, QString& err);
+    bool open(QString session_file_name, QString& err);
     void start();
     void stop();
     void close();
-    bool remove(bool erase_data, QWidget *self);
+    bool remove(bool erase_data, QString& err);
+
+    inline QString getSessionName() const {
+        return name_;
+    }
+
+    inline QString getDataFileName() const {
+        return datafile_name_;
+    }
 
 private:
-    inline bool isActive() {
+    enum Status {
+        Active,
+        Stopped,
+        Closed
+    };
+
+    inline bool isActive() const {
         return status_ == Active;
     }
 
-    inline bool isClosed() {
+    inline bool isClosed() const {
         return status_ == Closed;
     }
 
 private:
     QString name_;
-    QString datafile_location_;
+    QString datafile_name_;
     Status status_;
 
     QScopedPointer<QFile> session_file;

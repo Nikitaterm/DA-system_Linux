@@ -47,9 +47,9 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionNew_session"/>
-    <addaction name="actionClose_session"/>
-    <addaction name="actionClose_session_2"/>
+    <addaction name="actionNewSession"/>
+    <addaction name="actionOpenSession"/>
+    <addaction name="actionCloseSession"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
@@ -67,17 +67,17 @@
    <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <action name="actionNew_session">
+  <action name="actionNewSession">
    <property name="text">
     <string>New session</string>
    </property>
   </action>
-  <action name="actionClose_session">
+  <action name="actionOpenSession">
    <property name="text">
     <string>Open session</string>
    </property>
   </action>
-  <action name="actionClose_session_2">
+  <action name="actionCloseSession">
    <property name="text">
     <string>Close session</string>
    </property>
