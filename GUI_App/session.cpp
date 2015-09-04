@@ -25,6 +25,7 @@ bool Session::create(QString name, QString datafile_location, QString& err) {
     out << name_ << "\n" << datafile_name_;
     session_file->close();
     status_ = Stopped;
+    setupPlotter();
     return true;
 }
 
@@ -44,6 +45,7 @@ bool Session::open(QString session_file_name, QString& err) {
         }
         session_file->close();
         status_ = Stopped;
+        setupPlotter();
         return true;
     }
     return true;
@@ -82,4 +84,25 @@ bool Session::remove(bool erase_data, QString& err) {
         }
     }
     return true;
+}
+
+void Session::setupPlotter() const {
+    plotter_->setBackground(Qt::black);
+    plotter_->xAxis->setLabelColor(Qt::white);
+    plotter_->xAxis2->setLabelColor(Qt::white);
+    plotter_->yAxis->setLabelColor(Qt::white);
+    plotter_->xAxis->setLabel("degree, tag");
+    plotter_->xAxis2->setLabel("degree, grad");
+    plotter_->yAxis->setLabel("time, s");
+    plotter_->xAxis->setBasePen(QPen(Qt::white));
+    plotter_->xAxis->setTickPen(QPen(Qt::white));
+    plotter_->xAxis->setSubTickPen(QPen(Qt::white));
+    plotter_->xAxis2->setBasePen(QPen(Qt::white));
+    plotter_->xAxis2->setTickPen(QPen(Qt::white));
+    plotter_->xAxis2->setSubTickPen(QPen(Qt::white));
+    plotter_->yAxis->setBasePen(QPen(Qt::white));
+    plotter_->yAxis->setTickPen(QPen(Qt::white));
+    plotter_->yAxis->setSubTickPen(QPen(Qt::white));
+    plotter_->xAxis2->setVisible(true);
+    plotter_->replot();
 }

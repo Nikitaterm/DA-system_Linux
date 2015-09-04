@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 #include "messagehandler.h"
 
+#include "qcustomplot.h"
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -19,6 +21,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->statusBar->addWidget(&status_data_file);
     updateCurrentSessionInfo();
     ui->actionCloseSession->setEnabled(false);
+    ui->widget->setVisible(false);
+    this->showFullScreen();
+    ui->widget->resize(QApplication::desktop()->size().width(),
+                       QApplication::desktop()->size().height() - 2*ui->statusBar->size().height());  //TODO: remove this workaround
 }
 
 MainWindow::~MainWindow()
@@ -27,7 +33,7 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::openSession_OnClick() {
-    std::unique_ptr<Session> session(new Session);
+    std::unique_ptr<Session> session(new Session(ui->widget));
     QString file_name = QFileDialog::getOpenFileName(0,"",
                                  QDir::current().absolutePath(),"*.ss");
     if (!file_name.isEmpty()) {
@@ -42,6 +48,7 @@ void MainWindow::openSession_OnClick() {
         ui->actionOpenSession->setEnabled(false);
         ui->actionNewSession->setEnabled(false);
         ui->actionCloseSession->setEnabled(true);
+        ui->widget->setVisible(true);
     }
 }
 
@@ -55,7 +62,7 @@ void MainWindow::newSession_OnClick() {
 }
 
 void MainWindow::newSession(QString name, QString data_location) {
-   std::unique_ptr<Session> session(new Session);
+   std::unique_ptr<Session> session(new Session(ui->widget));
    QString err;
    if (!session->create(name, data_location, err)) {
        MSG(this, ERROR, err);
@@ -67,6 +74,7 @@ void MainWindow::newSession(QString name, QString data_location) {
    ui->actionOpenSession->setEnabled(false);
    ui->actionNewSession->setEnabled(false);
    ui->actionCloseSession->setEnabled(true);
+   ui->widget->setVisible(true);
 }
 
 bool MainWindow::closeSession_OnClick() {
@@ -82,6 +90,7 @@ bool MainWindow::closeSession_OnClick() {
         ui->actionOpenSession->setEnabled(true);
         ui->actionNewSession->setEnabled(true);
         ui->actionCloseSession->setEnabled(false);
+        ui->widget->setVisible(false);
         return cur_session != sessions.end();
     }
     return false;
