@@ -22,9 +22,11 @@ MainWindow::MainWindow(QWidget *parent) :
     updateCurrentSessionInfo();
     ui->actionCloseSession->setEnabled(false);
     ui->widget->setVisible(false);
-    this->showFullScreen();
+    /*this->showFullScreen();
     ui->widget->resize(QApplication::desktop()->size().width(),
-                       QApplication::desktop()->size().height() - 2*ui->statusBar->size().height());  //TODO: remove this workaround
+                       QApplication::desktop()->size().height() - 2*ui->statusBar->size().height());  //TODO: remove this workaround*/
+    connect(ui->actionStart, SIGNAL(triggered()), this, SLOT(startSession_OnClick()));
+    connect(ui->actionStop, SIGNAL(triggered()), this, SLOT(stopSession_OnClick()));
 }
 
 MainWindow::~MainWindow()
@@ -45,7 +47,7 @@ void MainWindow::openSession_OnClick() {
         sessions.push_back(std::move(session));
         cur_session = sessions.end() - 1;
         updateCurrentSessionInfo();
-        ui->actionOpenSession->setEnabled(false);
+        ui->actionOpenSession->setEnabled(false);   //TODO: create a method for this
         ui->actionNewSession->setEnabled(false);
         ui->actionCloseSession->setEnabled(true);
         ui->widget->setVisible(true);
@@ -103,5 +105,19 @@ void MainWindow::updateCurrentSessionInfo() {
     } else {
         status_session_name.setText("No open sessions");
         status_data_file.setText("");
+    }
+}
+
+void MainWindow::startSession_OnClick() {
+    QString err;
+    if (!cur_session->get()->start(err)) {
+        MSG(this, ERROR, err);
+    }
+}
+
+void MainWindow::stopSession_OnClick() {
+    QString err;
+    if (!cur_session->get()->stop(err)) {
+        MSG(this, ERROR, err);
     }
 }

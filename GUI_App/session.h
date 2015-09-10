@@ -6,15 +6,17 @@
 #include <QScopedPointer>
 
 #include "qcustomplot.h"
+#include "plotter.h"
 
-class Session {
+class Session : public QObject {
+    Q_OBJECT
 public:
-    Session(QCustomPlot* plotter) : status_(Closed), plotter_(plotter) {
+    Session(QCustomPlot* plotter) : status_(Closed), plotter_(data_file, plotter) {
     }
     bool create(QString name, QString datafile_location, QString& err);
     bool open(QString session_file_name, QString& err);
-    void start();
-    void stop();
+    bool start(QString& err);
+    bool stop(QString& err);
     void close();
     bool remove(bool erase_data, QString& err);
 
@@ -38,7 +40,6 @@ private:
     inline bool isClosed() const {
         return status_ == Closed;
     }
-    void setupPlotter() const;
 
 private:
     QString name_;
@@ -48,7 +49,7 @@ private:
     QScopedPointer<QFile> session_file;
     QScopedPointer<QFile> data_file;
 
-    QCustomPlot* plotter_;
+    Plotter plotter_;
 };
 
 #endif // SESSION_H

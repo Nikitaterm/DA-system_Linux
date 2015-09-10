@@ -30,6 +30,8 @@ private slots:
     void newSession_OnClick();
     void newSession(QString name, QString data_location);
     bool closeSession_OnClick();  // Return true if there is at least one opened session
+    void startSession_OnClick();
+    void stopSession_OnClick();
 
 private:
     void updateCurrentSessionInfo();

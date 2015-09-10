@@ -3,6 +3,7 @@
 
 #include <QFileDialog>
 #include <QTextStream>
+#include <QThread>
 
 #define SESSION_FILE_DIR QDir::current().absolutePath() + "/sessions/"
 #define EXT_POSTFIX ".ss"
@@ -25,7 +26,6 @@ bool Session::create(QString name, QString datafile_location, QString& err) {
     out << name_ << "\n" << datafile_name_;
     session_file->close();
     status_ = Stopped;
-    setupPlotter();
     return true;
 }
 
@@ -45,7 +45,6 @@ bool Session::open(QString session_file_name, QString& err) {
         }
         session_file->close();
         status_ = Stopped;
-        setupPlotter();
         return true;
     }
     return true;
@@ -54,19 +53,39 @@ bool Session::open(QString session_file_name, QString& err) {
 void Session::close() {
     if (!isClosed()) {
         if (isActive()) {
-            stop();
+            QString tmp;    //TODO: avoid tmp
+            stop(tmp);
         }
         data_file->close();
         status_ = Closed;
     }
 }
 
-void Session::start() {
-    status_ = Active;
+bool Session::start(QString& err) {
+    if (!isClosed() && !isActive()) {
+        QThread *thread = new QThread;
+        plotter_.moveToThread(thread);
+        connect(thread, SIGNAL(started()), &plotter_, SLOT(start()));
+        connect(&plotter_, SIGNAL(finished()), thread, SLOT(quit()));
+        connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+        thread->start();
+        status_ = Active;
+        return true;
+    } else {
+        err = "Can't start a session!";
+        return false;
+    }
 }
 
-void Session::stop() {
-    status_ = Stopped;
+bool Session::stop(QString& err) {
+    if (isActive()) {
+        plotter_.stop();
+        status_ = Stopped;
+        return true;
+    } else {
+        err = "Can't stop a not active session";
+        return false;
+    }
 }
 
 bool Session::remove(bool erase_data, QString& err) {
@@ -84,25 +103,4 @@ bool Session::remove(bool erase_data, QString& err) {
         }
     }
     return true;
-}
-
-void Session::setupPlotter() const {
-    plotter_->setBackground(Qt::black);
-    plotter_->xAxis->setLabelColor(Qt::white);
-    plotter_->xAxis2->setLabelColor(Qt::white);
-    plotter_->yAxis->setLabelColor(Qt::white);
-    plotter_->xAxis->setLabel("degree, tag");
-    plotter_->xAxis2->setLabel("degree, grad");
-    plotter_->yAxis->setLabel("time, s");
-    plotter_->xAxis->setBasePen(QPen(Qt::white));
-    plotter_->xAxis->setTickPen(QPen(Qt::white));
-    plotter_->xAxis->setSubTickPen(QPen(Qt::white));
-    plotter_->xAxis2->setBasePen(QPen(Qt::white));
-    plotter_->xAxis2->setTickPen(QPen(Qt::white));
-    plotter_->xAxis2->setSubTickPen(QPen(Qt::white));
-    plotter_->yAxis->setBasePen(QPen(Qt::white));
-    plotter_->yAxis->setTickPen(QPen(Qt::white));
-    plotter_->yAxis->setSubTickPen(QPen(Qt::white));
-    plotter_->xAxis2->setVisible(true);
-    plotter_->replot();
 }

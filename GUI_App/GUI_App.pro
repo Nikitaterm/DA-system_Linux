@@ -17,13 +17,15 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     qcustomplot.cpp \
     session.cpp \
-    newsessiondialog.cpp
+    newsessiondialog.cpp \
+    plotter.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
     session.h \
     messagehandler.h \
-    newsessiondialog.h
+    newsessiondialog.h \
+    plotter.h
 
 FORMS    += mainwindow.ui \
     newsessiondialog.ui
