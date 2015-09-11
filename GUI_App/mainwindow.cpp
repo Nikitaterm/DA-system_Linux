@@ -31,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    while(closeSession_OnClick());
     delete ui;
 }
 

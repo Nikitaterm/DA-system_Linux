@@ -16,11 +16,8 @@ public:
     void setupPlotter() const;
 
 public slots:
-    void start();
+    void doWork();
     void stop();
-
-signals:
-    void finished();
 
 private:
     enum Status {
@@ -38,7 +35,8 @@ private:
     QCustomPlot* plotter_;
     Status status_;
 
-    std::deque<uint16_t> draw_queue_;
+    std::deque<uint16_t> draw_queue_;  // TODO: remove this
+    QCPDataMap* draw_data_;
 };
 
 #endif // PLOTTER_H

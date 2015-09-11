@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QString>
 #include <QScopedPointer>
+#include <QThread>
 
 #include "qcustomplot.h"
 #include "plotter.h"
@@ -12,6 +13,7 @@ class Session : public QObject {
     Q_OBJECT
 public:
     Session(QCustomPlot* plotter) : status_(Closed), plotter_(data_file, plotter) {
+        plotter_.moveToThread(&plotter_thread);
     }
     bool create(QString name, QString datafile_location, QString& err);
     bool open(QString session_file_name, QString& err);
@@ -49,6 +51,7 @@ private:
     QScopedPointer<QFile> session_file;
     QScopedPointer<QFile> data_file;
 
+    QThread plotter_thread;
     Plotter plotter_;
 };
 

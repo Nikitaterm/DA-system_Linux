@@ -3,7 +3,6 @@
 
 #include <QFileDialog>
 #include <QTextStream>
-#include <QThread>
 
 #define SESSION_FILE_DIR QDir::current().absolutePath() + "/sessions/"
 #define EXT_POSTFIX ".ss"
@@ -63,23 +62,22 @@ void Session::close() {
 
 bool Session::start(QString& err) {
     if (!isClosed() && !isActive()) {
-        QThread *thread = new QThread;
-        plotter_.moveToThread(thread);
-        connect(thread, SIGNAL(started()), &plotter_, SLOT(start()));
-        connect(&plotter_, SIGNAL(finished()), thread, SLOT(quit()));
-        connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-        thread->start();
+        connect(&plotter_thread, SIGNAL(started()), &plotter_, SLOT(doWork()));
+        plotter_thread.start();
         status_ = Active;
         return true;
     } else {
-        err = "Can't start a session!";
+        err = "Can't start the session!";
         return false;
     }
 }
 
 bool Session::stop(QString& err) {
     if (isActive()) {
+        // TODO: resolve this workaround
+        disconnect(&plotter_thread, SIGNAL(started()), &plotter_, SLOT(doWork()));
         plotter_.stop();
+        plotter_.thread()->wait();
         status_ = Stopped;
         return true;
     } else {

@@ -1,10 +1,15 @@
 #include "plotter.h"
 
-#define PLOT_DELAY 10
+#define PLOT_DELAY 100
 
 Plotter::Plotter(const QScopedPointer<QFile>& data_file_, QCustomPlot* plotter):
     data_file(data_file_), plotter_(plotter), status_(Stopped) {
     setupPlotter();
+    draw_data_ = new QCPDataMap;
+    // Since that point the plotter_ has the ownership of draw_data_,
+    // that's why don't worry about memory release - the plotter_ is
+    // the responsible for that.
+    plotter_->graph(0)->setData(draw_data_, false);
 }
 
 void Plotter::setupPlotter() const {
@@ -25,32 +30,28 @@ void Plotter::setupPlotter() const {
     plotter_->yAxis->setTickPen(QPen(Qt::white));
     plotter_->yAxis->setSubTickPen(QPen(Qt::white));
     plotter_->xAxis2->setVisible(true);
-    plotter_->xAxis->setRange(0, 100);
+    plotter_->xAxis->setRange(0, 1000);
     plotter_->yAxis->setRange(0, 100);
     plotter_->addGraph();
     plotter_->replot();
 }
 
 void Plotter::draw() {
-    QVector<double> x(draw_queue_.size()), y(draw_queue_.size());
-    for (int i=0; i<draw_queue_.size(); ++i)
-    {
-      x[i] = i;
-      y[i] = draw_queue_[i];
+    auto it = draw_data_->begin();
+    for (int i=0; i<draw_queue_.size(); ++i) {
+      it = draw_data_->insert(it, i, QCPData(i, draw_queue_[i]));
     }
-    plotter_->graph(0)->clearData();
-    plotter_->graph(0)->addData(x, y);
     plotter_->replot();
 }
 
-void Plotter::start() {
+void Plotter::doWork() {
     status_ = Active;
     while(isActive()) {
         this->thread()->msleep(PLOT_DELAY);
         readFromFile();
         draw();
     }
-    emit finished();
+    this->thread()->exit(0);
 }
 
 void Plotter::stop() {
@@ -67,7 +68,7 @@ void Plotter::readFromFile() {
     if (it == 20) {
         it = 0;
     }
-    if (draw_queue_.size() == 100) {
+    if (draw_queue_.size() == 1000) {
         draw_queue_.pop_front();
     }
     draw_queue_.push_back(20 + data);
