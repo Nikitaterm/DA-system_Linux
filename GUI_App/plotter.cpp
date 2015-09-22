@@ -1,15 +1,19 @@
+#include <unistd.h>
+
+#include "sys/file.h"
 #include "plotter.h"
 
-#define PLOT_DELAY 100
+#define PLOT_DELAY 10
 
-Plotter::Plotter(const QScopedPointer<QFile>& data_file_, QCustomPlot* plotter):
-    data_file(data_file_), plotter_(plotter), status_(Stopped) {
+Plotter::Plotter(const QScopedPointer<QFile>& data_file, QCustomPlot* plotter):
+        data_file_(data_file), plotter_(plotter), status_(Stopped), test("/home/nikita/test.test") {
     setupPlotter();
     draw_data_ = new QCPDataMap;
     // Since that point the plotter_ has the ownership of draw_data_,
     // that's why don't worry about memory release - the plotter_ is
     // the responsible for that.
     plotter_->graph(0)->setData(draw_data_, false);
+    test.open(QIODevice::Append | QIODevice::ReadOnly);
 }
 
 void Plotter::setupPlotter() const {
@@ -31,7 +35,7 @@ void Plotter::setupPlotter() const {
     plotter_->yAxis->setSubTickPen(QPen(Qt::white));
     plotter_->xAxis2->setVisible(true);
     plotter_->xAxis->setRange(0, 1000);
-    plotter_->yAxis->setRange(0, 100);
+    plotter_->yAxis->setRange(0, 65535);
     plotter_->addGraph();
     plotter_->replot();
 }
@@ -45,12 +49,15 @@ void Plotter::draw() {
 }
 
 void Plotter::doWork() {
+    ro_data_file.reset(new QFile(data_file_->fileName()));
+    ro_data_file->open(QIODevice::ReadOnly);
     status_ = Active;
     while(isActive()) {
         this->thread()->msleep(PLOT_DELAY);
         readFromFile();
         draw();
     }
+    ro_data_file->close();
     this->thread()->exit(0);
 }
 
@@ -59,15 +66,12 @@ void Plotter::stop() {
 }
 
 void Plotter::readFromFile() {
-    static int it = 0;
-    /*QString data;
-    data = data_file->readLine();
-    plotter_->xAxis->setLabel(data);
-    plotter_->replot();*/
-    uint16_t data = it++;
-    if (it == 20) {
-        it = 0;
-    }
+    u_int16_t data;
+    //flock(data_file_->handle(), LOCK_EX);
+    while(read(ro_data_file->handle(), reinterpret_cast<char*>(&data), sizeof(data)) == -1);    //TODO: remove while
+    //flock(data_file_->handle(), LOCK_UN);
+    //test.write(reinterpret_cast<char*>(&data), 2);
+    plotter_->replot();
     if (draw_queue_.size() == 1000) {
         draw_queue_.pop_front();
     }

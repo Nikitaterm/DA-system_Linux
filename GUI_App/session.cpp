@@ -8,21 +8,22 @@
 #define EXT_POSTFIX ".ss"
 #define DATA_FILE_POSTFIX ".raw"
 
-bool Session::create(QString name, QString datafile_location, QString& err) {
+bool Session::create(QString name, QString data_file_location, QString dev_file_location, QString& err) {
     name_ = name;
-    datafile_name_ = datafile_location + DATA_FILE_POSTFIX;
+    data_file_location = data_file_location + DATA_FILE_POSTFIX;
     session_file.reset(new QFile(SESSION_FILE_DIR + name_ + EXT_POSTFIX));
-    data_file.reset(new QFile(datafile_name_));
+    data_file.reset(new QFile(data_file_location));
+    dev_file_.reset(new QFile(dev_file_location));
     if (!session_file->open(QIODevice::WriteOnly)) {
         err = "Failed to create the session file!";
         return false;
     }
     if (!data_file->open(QIODevice::ReadWrite)) {
-        err = "Failed to create the data file: " + datafile_name_;
+        err = "Failed to create the data file: " + data_file_location;
         return false;
     }
-    QTextStream out(session_file.data());
-    out << name_ << "\n" << datafile_name_;
+    QTextStream out(session_file.data());   // TODO: use QDataStream instead
+    out << name_ << "\n" << data_file_location << "\n" << dev_file_location;
     session_file->close();
     status_ = Stopped;
     return true;
@@ -36,10 +37,12 @@ bool Session::open(QString session_file_name, QString& err) {
             return false;
         }
         QTextStream out(session_file.data());
-        out >> name_ >> datafile_name_;
-        data_file.reset(new QFile(datafile_name_));
+        QString dev_file_location;
+        out >> name_ >> data_file_name_ >> dev_file_location;
+        data_file.reset(new QFile(data_file_name_));
+        dev_file_.reset(new QFile(dev_file_location));
         if (!data_file->open(QIODevice::ReadWrite | QIODevice::Append)) {
-            err = "Failed to open a data file: " + datafile_name_ + "!";
+            err = "Failed to open a data file: " + data_file_name_ + "!";
             return false;
         }
         session_file->close();
@@ -52,7 +55,7 @@ bool Session::open(QString session_file_name, QString& err) {
 void Session::close() {
     if (!isClosed()) {
         if (isActive()) {
-            QString tmp;    //TODO: avoid tmp
+            QString tmp;    // TODO: avoid tmp
             stop(tmp);
         }
         data_file->close();
@@ -62,8 +65,11 @@ void Session::close() {
 
 bool Session::start(QString& err) {
     if (!isClosed() && !isActive()) {
-        connect(&plotter_thread, SIGNAL(started()), &plotter_, SLOT(doWork()));
-        plotter_thread.start();
+        connect(&data_read_thread_, SIGNAL(started()), &data_reader_, SLOT(doWork()));
+        connect(&data_reader_, SIGNAL(error(QString)), this, SLOT(threadError(QString)));
+        connect(&plotter_thread_, SIGNAL(started()), &plotter_, SLOT(doWork()));
+        data_read_thread_.start();  // TODO: change to data_reader_.thread()->start()
+        plotter_thread_.start();
         status_ = Active;
         return true;
     } else {
@@ -75,9 +81,16 @@ bool Session::start(QString& err) {
 bool Session::stop(QString& err) {
     if (isActive()) {
         // TODO: resolve this workaround
-        disconnect(&plotter_thread, SIGNAL(started()), &plotter_, SLOT(doWork()));
-        plotter_.stop();
-        plotter_.thread()->wait();
+        disconnect(&data_read_thread_, SIGNAL(started()), &data_reader_, SLOT(doWork()));
+        disconnect(&plotter_thread_, SIGNAL(started()), &plotter_, SLOT(doWork()));
+        if (data_reader_.thread()->isRunning()) {
+            data_reader_.stop();
+            data_reader_.thread()->wait();
+        }
+        if (plotter_.thread()->isRunning()) {
+            plotter_.stop();
+            plotter_.thread()->wait();
+        }
         status_ = Stopped;
         return true;
     } else {
@@ -101,4 +114,10 @@ bool Session::remove(bool erase_data, QString& err) {
         }
     }
     return true;
+}
+
+void Session::threadError(QString err) {
+    QString tmp;
+    stop(tmp);
+    emit sessionThreadError(err);   // TODO: what about an error during the stop?
 }

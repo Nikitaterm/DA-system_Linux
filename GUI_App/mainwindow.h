@@ -28,13 +28,15 @@ private slots:
     void openSession_OnClick();
     void quit_OnClick();
     void newSession_OnClick();
-    void newSession(QString name, QString data_location);
+    void newSession(QString name, QString data_location, QString dev_file_location);
     bool closeSession_OnClick();  // Return true if there is at least one opened session
     void startSession_OnClick();
     void stopSession_OnClick();
+    void sessionThreadError(QString err);
 
 private:
     void updateCurrentSessionInfo();
+    void closeAllSessions();
 
 private:
     Ui::MainWindow *ui;

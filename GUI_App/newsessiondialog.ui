@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>368</width>
-    <height>111</height>
+    <height>115</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,8 +22,8 @@
   <widget class="QPushButton" name="b_data_file">
    <property name="geometry">
     <rect>
-     <x>260</x>
-     <y>30</y>
+     <x>10</x>
+     <y>70</y>
      <width>99</width>
      <height>31</height>
     </rect>
@@ -58,8 +58,8 @@
   <widget class="QPushButton" name="b_cancel">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>70</y>
+     <x>250</x>
+     <y>60</y>
      <width>99</width>
      <height>27</height>
     </rect>
@@ -71,14 +71,27 @@
   <widget class="QPushButton" name="b_ok">
    <property name="geometry">
     <rect>
-     <x>230</x>
-     <y>70</y>
+     <x>250</x>
+     <y>20</y>
      <width>99</width>
      <height>27</height>
     </rect>
    </property>
    <property name="text">
     <string>Ok</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="b_device_file">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>70</y>
+     <width>99</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&gt;&gt; device file</string>
    </property>
   </widget>
  </widget>

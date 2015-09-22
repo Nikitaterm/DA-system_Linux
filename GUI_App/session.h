@@ -6,16 +6,21 @@
 #include <QScopedPointer>
 #include <QThread>
 
+#include "datareader.h"
 #include "qcustomplot.h"
 #include "plotter.h"
 
 class Session : public QObject {
     Q_OBJECT
 public:
-    Session(QCustomPlot* plotter) : status_(Closed), plotter_(data_file, plotter) {
-        plotter_.moveToThread(&plotter_thread);
+    explicit Session(QCustomPlot* plotter):
+            status_(Closed),
+            plotter_(data_file, plotter),
+            data_reader_(data_file, dev_file_) {
+        plotter_.moveToThread(&plotter_thread_);
+        data_reader_.moveToThread(&data_read_thread_);
     }
-    bool create(QString name, QString datafile_location, QString& err);
+    bool create(QString name, QString data_file_location, QString dev_file_location, QString& err);
     bool open(QString session_file_name, QString& err);
     bool start(QString& err);
     bool stop(QString& err);
@@ -27,7 +32,7 @@ public:
     }
 
     inline QString getDataFileName() const {
-        return datafile_name_;
+        return data_file_name_;
     }
 
 private:
@@ -43,16 +48,27 @@ private:
         return status_ == Closed;
     }
 
+signals:
+    void sessionThreadError(QString err);
+
+private slots:
+    void threadError(QString err);
+
 private:
     QString name_;
-    QString datafile_name_;
+    QString data_file_name_;    // TODO: remove?
     Status status_;
 
     QScopedPointer<QFile> session_file;
     QScopedPointer<QFile> data_file;
+    QScopedPointer<QFile> dev_file_;
 
-    QThread plotter_thread;
+    QThread plotter_thread_;
     Plotter plotter_;
+
+    QThread data_read_thread_;
+    DataReader data_reader_;
+
 };
 
 #endif // SESSION_H

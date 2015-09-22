@@ -15,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionNewSession, SIGNAL(triggered()), this, SLOT(newSession_OnClick()));
     new_session_dialog.reset(new NewSessionDialog(this));
     cur_session = sessions.end();
-    connect(new_session_dialog.get(), SIGNAL(newSession(QString, QString)), this, SLOT(newSession(QString, QString)));
+    connect(new_session_dialog.get(), SIGNAL(newSession(QString, QString, QString)), this, SLOT(newSession(QString, QString, QString)));
     connect(ui->actionCloseSession, SIGNAL(triggered()), this, SLOT(closeSession_OnClick()));
     ui->statusBar->addWidget(&status_session_name);
     ui->statusBar->addWidget(&status_data_file);
@@ -27,11 +27,13 @@ MainWindow::MainWindow(QWidget *parent) :
                        QApplication::desktop()->size().height() - 2*ui->statusBar->size().height());  //TODO: remove this workaround*/
     connect(ui->actionStart, SIGNAL(triggered()), this, SLOT(startSession_OnClick()));
     connect(ui->actionStop, SIGNAL(triggered()), this, SLOT(stopSession_OnClick()));
+    ui->actionStart->setEnabled(false);
+    ui->actionStop->setEnabled(false);
 }
 
 MainWindow::~MainWindow()
 {
-    while(closeSession_OnClick());
+    closeAllSessions();
     delete ui;
 }
 
@@ -45,6 +47,7 @@ void MainWindow::openSession_OnClick() {
             MSG(this, ERROR, err);
             return;
         }
+        connect(session.get(), SIGNAL(sessionThreadError(QString)), this, SLOT(sessionThreadError(QString)));
         sessions.push_back(std::move(session));
         cur_session = sessions.end() - 1;
         updateCurrentSessionInfo();
@@ -52,11 +55,13 @@ void MainWindow::openSession_OnClick() {
         ui->actionNewSession->setEnabled(false);
         ui->actionCloseSession->setEnabled(true);
         ui->widget->setVisible(true);
+        ui->actionStart->setEnabled(true);
+        ui->actionStop->setEnabled(false);
     }
 }
 
 void MainWindow::quit_OnClick() {
-    while(closeSession_OnClick());
+    closeAllSessions();
     QApplication::quit();
 }
 
@@ -64,13 +69,14 @@ void MainWindow::newSession_OnClick() {
     new_session_dialog->show();
 }
 
-void MainWindow::newSession(QString name, QString data_location) {
+void MainWindow::newSession(QString name, QString data_location, QString dev_file_location) {
    std::unique_ptr<Session> session(new Session(ui->widget));
    QString err;
-   if (!session->create(name, data_location, err)) {
+   if (!session->create(name, data_location, dev_file_location, err)) {
        MSG(this, ERROR, err);
        return;
    }
+   connect(session.get(), SIGNAL(sessionThreadError(QString)), this, SLOT(sessionThreadError(QString)));
    sessions.push_back(std::move(session));
    cur_session = sessions.end() - 1;
    updateCurrentSessionInfo();
@@ -78,11 +84,14 @@ void MainWindow::newSession(QString name, QString data_location) {
    ui->actionNewSession->setEnabled(false);
    ui->actionCloseSession->setEnabled(true);
    ui->widget->setVisible(true);
+   ui->actionStart->setEnabled(true);
+   ui->actionStop->setEnabled(false);
 }
 
 bool MainWindow::closeSession_OnClick() {
     if (cur_session != sessions.end()) {
         cur_session->get()->close();
+        disconnect(cur_session->get(), SIGNAL(sessionThreadError(QString)), this, SLOT(sessionThreadError(QString)));
         sessions.erase(cur_session);
         if (sessions.size() != 0) {
             cur_session = sessions.end() - 1;
@@ -94,6 +103,8 @@ bool MainWindow::closeSession_OnClick() {
         ui->actionNewSession->setEnabled(true);
         ui->actionCloseSession->setEnabled(false);
         ui->widget->setVisible(false);
+        ui->actionStart->setEnabled(false);
+        ui->actionStop->setEnabled(false);
         return cur_session != sessions.end();
     }
     return false;
@@ -109,11 +120,17 @@ void MainWindow::updateCurrentSessionInfo() {
     }
 }
 
+void MainWindow::closeAllSessions() {
+    while(closeSession_OnClick());
+}
+
 void MainWindow::startSession_OnClick() {
     QString err;
     if (!cur_session->get()->start(err)) {
         MSG(this, ERROR, err);
     }
+    ui->actionStart->setEnabled(false);
+    ui->actionStop->setEnabled(true);
 }
 
 void MainWindow::stopSession_OnClick() {
@@ -121,4 +138,12 @@ void MainWindow::stopSession_OnClick() {
     if (!cur_session->get()->stop(err)) {
         MSG(this, ERROR, err);
     }
+    ui->actionStart->setEnabled(true);
+    ui->actionStop->setEnabled(false);
+}
+
+void MainWindow::sessionThreadError(QString err) {
+    ui->actionStart->setEnabled(true);
+    ui->actionStop->setEnabled(false);
+    MSG(this, ERROR, "Data thread error: " + err);
 }

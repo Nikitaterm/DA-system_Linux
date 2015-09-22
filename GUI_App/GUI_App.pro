@@ -18,14 +18,16 @@ SOURCES += main.cpp\
     qcustomplot.cpp \
     session.cpp \
     newsessiondialog.cpp \
-    plotter.cpp
+    plotter.cpp \
+    datareader.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
     session.h \
     messagehandler.h \
     newsessiondialog.h \
-    plotter.h
+    plotter.h \
+    datareader.h
 
 FORMS    += mainwindow.ui \
     newsessiondialog.ui
