@@ -1,10 +1,9 @@
 #ifndef PLOTTER_H
 #define PLOTTER_H
 
-#include <stdint.h>
 #include <deque>
+
 #include <QFile>
-#include <QObject>
 #include <QScopedPointer>
 
 #include "qcustomplot.h"
@@ -24,22 +23,20 @@ private:
         Active,
         Stopped
     };
-    void draw();
-    inline bool isActive() {
-        return status_ == Active;
-    }
     void readFromFile();
+    void draw() const;
+    inline bool isActive() const {
+        return status == Active;
+    }
 
 private:
-    const QScopedPointer<QFile>& data_file_;
+    Status status;
+    QCustomPlot* plotter;
+    const QScopedPointer<QFile>& data_file;
     QScopedPointer<QFile> ro_data_file;
-    QCustomPlot* plotter_;
-    Status status_;
-
-    std::deque<uint16_t> draw_queue_;  // TODO: remove this
-    QCPDataMap* draw_data_;
-
-    QFile test;
+    std::deque<uint16_t> draw_queue;
+    QCPDataMap* const draw_data;
+    QFile test; // TODO: remove.
 };
 
 #endif // PLOTTER_H

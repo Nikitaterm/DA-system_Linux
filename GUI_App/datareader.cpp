@@ -1,18 +1,17 @@
 #include <QThread>
-#include "sys/file.h"
-#include <unistd.h>
+
 #include "datareader.h"
 
 DataReader::DataReader(const QScopedPointer<QFile>& data_file, const QScopedPointer<QFile>& device_file):
-        data_file_(data_file), device_file_(device_file) {
+        data_file(data_file), device_file(device_file) {
 }
 
 void DataReader::doWork() {
     if (openDevice()) {
-        status_ = Active;
+        status = Active;
         while(isActive()) {
             if (!getData()) {
-                status_ = Stopped;
+                status = Stopped;
                 emit error("can't get data from the device file.");
             }
         }
@@ -24,27 +23,28 @@ void DataReader::doWork() {
 }
 
 void DataReader::stop() {
-    status_ = Stopped;
+    status = Stopped;
 }
 
-bool DataReader::openDevice() {
-    if (!device_file_->open(QIODevice::ReadOnly)) {
+bool DataReader::openDevice() const {
+    if (!device_file->open(QIODevice::ReadOnly)) {
         return false;
     }
     return true;
 }
 
-void DataReader::closeDevice() {
-    device_file_->close();
+void DataReader::closeDevice() const {
+    device_file->close();
 }
 
-bool DataReader::getData() {    // TODO: maybe it's possible to do it faster?
+bool DataReader::getData() const {    // TODO: maybe it's possible to do it faster?
     u_int16_t buff;
-    if (device_file_->read(reinterpret_cast<char*>(&buff), sizeof(buff)) != sizeof(buff)) {  // TODO: why not to get 4 bytes?
+    if (device_file->read(reinterpret_cast<char*>(&buff), sizeof(buff)) != sizeof(buff)) {  // TODO: why not to get 4 bytes?
+        return false;   // TODO: you know about an error here =)
+    }
+    if (data_file->write(reinterpret_cast<char*>(&buff), sizeof(buff)) != sizeof(buff)) {
         return false;
     }
-    if (write(data_file_->handle(), reinterpret_cast<char*>(&buff), sizeof(buff)) != sizeof(buff)) {
-        return false;
-    }
+    data_file->flush();
     return true;
 }

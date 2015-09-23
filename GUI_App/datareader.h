@@ -2,7 +2,6 @@
 #define DATAREADER_H
 
 #include <QFile>
-#include <QObject>
 #include <QScopedPointer>
 #include <QString>
 
@@ -13,7 +12,7 @@ public:
     explicit DataReader(const QScopedPointer<QFile>& data_file, const QScopedPointer<QFile>& device_file);
 
 signals:
-    void error(QString err);
+    void error(const QString& err);
 
 public slots:
     void doWork();
@@ -24,19 +23,17 @@ private:
         Active,
         Stopped
     };
-    inline bool isActive() {
-        return status_ == Active;
+    inline bool isActive() const {
+        return status == Active;
     }
-    bool openDevice();
-    bool getData();
-    void closeDevice();
+    bool openDevice() const;
+    bool getData() const;
+    void closeDevice() const;
 
 private:
-    Status status_;
-
-    const QScopedPointer<QFile>& data_file_;
-    const QScopedPointer<QFile>& device_file_;
-
+    Status status;
+    const QScopedPointer<QFile>& data_file;
+    const QScopedPointer<QFile>& device_file;
 };
 
 #endif // DATAREADER_H

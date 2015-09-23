@@ -13,27 +13,30 @@
 class Session : public QObject {
     Q_OBJECT
 public:
-    explicit Session(QCustomPlot* plotter):
-            status_(Closed),
-            plotter_(data_file, plotter),
-            data_reader_(data_file, dev_file_) {
-        plotter_.moveToThread(&plotter_thread_);
-        data_reader_.moveToThread(&data_read_thread_);
-    }
-    bool create(QString name, QString data_file_location, QString dev_file_location, QString& err);
-    bool open(QString session_file_name, QString& err);
+    explicit Session(QCustomPlot* plotter);
+    bool create(const QString& name, const QString& datafile_location, const QString& devfile_location,
+                QString& err);
+    bool open(const QString& session_file_name, QString& err);
+    bool close(QString& err);
     bool start(QString& err);
     bool stop(QString& err);
-    void close();
     bool remove(bool erase_data, QString& err);
 
     inline QString getSessionName() const {
-        return name_;
+        return name;
+    }
+    inline QString getDataFileName() const {
+        if (data_file != nullptr) {
+            return data_file->fileName();
+        }
+        return QString();
     }
 
-    inline QString getDataFileName() const {
-        return data_file_name_;
-    }
+signals:
+    void sessionThreadError(const QString& err);
+
+private slots:
+    void threadError(const QString& err);
 
 private:
     enum Status {
@@ -42,33 +45,22 @@ private:
         Closed
     };
     inline bool isActive() const {
-        return status_ == Active;
+        return status == Active;
     }
     inline bool isClosed() const {
-        return status_ == Closed;
+        return status == Closed;
     }
 
-signals:
-    void sessionThreadError(QString err);
-
-private slots:
-    void threadError(QString err);
-
 private:
-    QString name_;
-    QString data_file_name_;    // TODO: remove?
-    Status status_;
-
-    QScopedPointer<QFile> session_file;
+    QString name;
+    Status status;
+    QScopedPointer<QFile> session_file;     // TODO: use unique_ptr instead
     QScopedPointer<QFile> data_file;
-    QScopedPointer<QFile> dev_file_;
-
-    QThread plotter_thread_;
-    Plotter plotter_;
-
-    QThread data_read_thread_;
-    DataReader data_reader_;
-
+    QScopedPointer<QFile> dev_file;
+    QThread plotter_thread;
+    Plotter plotter;
+    QThread data_read_thread;
+    DataReader data_reader;
 };
 
 #endif // SESSION_H

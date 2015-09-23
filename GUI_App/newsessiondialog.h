@@ -16,18 +16,18 @@ public:
     ~NewSessionDialog();
 
 signals:
-    void newSession(QString name, QString dataFileLocation, QString deviceFileName);    //TODO: refactor function names
+    void newSession(const QString& name, const QString& dataFileLocation, const QString& deviceFileName);
 
 private slots:
     void dataFile_OnClick();
-    void deviceFile_onClick();
+    void deviceFile_OnClick();
     void ok_OnClick();
     void cancel_OnClick();
 
 private:
     Ui::NewSessionDialog *ui;
-    QString data_file_name_;
-    QString device_file_name_;
+    QString data_file_name;
+    QString device_file_name;
 };
 
 #endif // NEWSESSIONDIALOG_H

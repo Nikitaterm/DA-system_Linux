@@ -12,8 +12,8 @@ enum Severity {
 
 #define MSG(self, severity, text) showMessage(self, severity, text)
 
-static void showMessage(QWidget *self, Severity severity, const QString& text) {
-    QMessageBox msg(self);
+static void showMessage(const QWidget *self, Severity severity, const QString& text) {
+    QMessageBox msg(const_cast<QWidget*>(self));
     msg.setText(text);
     msg.setStandardButtons(QMessageBox::Ok);
     switch (severity) {
