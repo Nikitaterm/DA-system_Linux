@@ -59,6 +59,7 @@ void MainWindow::quit_OnClick() {
 }
 
 void MainWindow::newSession_OnClick() {
+    new_session_dialog->setFixedSize(new_session_dialog->width(), new_session_dialog->height());
     new_session_dialog->show();
 }
 

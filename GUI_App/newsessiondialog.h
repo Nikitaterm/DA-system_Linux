@@ -15,6 +15,9 @@ public:
     explicit NewSessionDialog(QWidget *parent = 0);
     ~NewSessionDialog();
 
+protected:
+    void showEvent(QShowEvent*);
+
 signals:
     void newSession(const QString& name, const QString& dataFileLocation, const QString& deviceFileName);
 

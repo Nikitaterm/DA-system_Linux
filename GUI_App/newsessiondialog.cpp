@@ -14,6 +14,12 @@ NewSessionDialog::NewSessionDialog(QWidget *parent):
     connect(ui->b_device_file, SIGNAL(clicked()), this, SLOT(deviceFile_OnClick()));
 }
 
+void NewSessionDialog::showEvent(QShowEvent*) {
+    data_file_name = QString();
+    device_file_name = QString();
+    ui->e_session_name->setText(QString());
+}
+
 NewSessionDialog::~NewSessionDialog() {
     delete ui;
 }
