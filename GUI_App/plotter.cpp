@@ -1,7 +1,5 @@
 #include "plotter.h"
 
-#define PLOT_DELAY 100
-
 Plotter::Plotter(const QScopedPointer<QFile>& data_file, QCustomPlot* plotter):
         status(Stopped), plotter(plotter), data_file(data_file), draw_data(new QCPDataMap),
         test("/home/nikita/test.test") {
@@ -50,7 +48,7 @@ void Plotter::doWork() {
     ro_data_file->open(QIODevice::ReadOnly);    // TODO: if wrong?
     status = Active;
     while(isActive()) {
-        this->thread()->msleep(PLOT_DELAY);
+        this->thread()->msleep(kPlotDelay);
         readFromFile();
         draw();
     }

@@ -27,7 +27,8 @@ HEADERS  += mainwindow.h \
     messagehandler.h \
     newsessiondialog.h \
     plotter.h \
-    datareader.h
+    datareader.h \
+    globals.h
 
 FORMS    += mainwindow.ui \
     newsessiondialog.ui

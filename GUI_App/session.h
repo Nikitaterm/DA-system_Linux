@@ -7,6 +7,7 @@
 #include <QThread>
 
 #include "datareader.h"
+#include "globals.h"
 #include "qcustomplot.h"
 #include "plotter.h"
 

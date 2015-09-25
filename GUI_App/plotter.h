@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QScopedPointer>
 
+#include "globals.h"
 #include "qcustomplot.h"
 
 class Plotter : public QObject {

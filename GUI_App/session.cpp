@@ -4,10 +4,6 @@
 #include "messagehandler.h"
 #include "session.h"
 
-#define SESSION_FILE_DIR QDir::current().absolutePath() + "/sessions/"
-#define EXT_POSTFIX ".ss"
-#define DATA_FILE_POSTFIX ".raw"
-
 Session::Session(QCustomPlot* plotter_):
         status(Closed), plotter(data_file, plotter_),
         data_reader(data_file, dev_file) {
@@ -18,8 +14,8 @@ Session::Session(QCustomPlot* plotter_):
 bool Session::create(const QString& name, const QString& datafile_location, const QString& devfile_location,
                      QString& err) {
     this->name = name;
-    QString datafile_location_ = datafile_location + DATA_FILE_POSTFIX;
-    session_file.reset(new QFile(SESSION_FILE_DIR + this->name + EXT_POSTFIX));
+    QString datafile_location_ = datafile_location + DATA_FILE_EXT;
+    session_file.reset(new QFile(SESSION_FILE_DIR + this->name + SESSION_FILE_EXT));
     data_file.reset(new QFile(datafile_location_));
     dev_file.reset(new QFile(devfile_location));
     if (!session_file->open(QIODevice::WriteOnly)) {
