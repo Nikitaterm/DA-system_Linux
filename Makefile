@@ -1,4 +1,4 @@
-export KERNELDIR = /lib/modules/3.4.43/build
+export KERNELDIR = /home/nikita/Cubieboard2/linux-sunxi/
 
 make: build_driver
 	@echo "*****Build completed successfully!*****"
@@ -10,7 +10,7 @@ clean_out:
 
 build_driver:
 	@echo "Building driver..."
-	cd driver && $(MAKE)
+	cd driver && $(MAKE) ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
 	@echo "Moving into out/..."
 	if [ ! -d "out/driver" ]; then \
 	    mkdir out/driver; \
