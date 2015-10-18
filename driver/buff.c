@@ -19,9 +19,6 @@ static Buffer buff;
 
 static DEFINE_SPINLOCK(producer_lock);
 
-DECLARE_WAIT_QUEUE_HEAD(WaitQ);
-static bool unlocked_;
-
 int initBuff(void) {
 	buff.data = (u16*)kmalloc(sizeof(u16)*BUFF_SIZE, GFP_KERNEL);
 	if (buff.data == NULL) {
@@ -47,15 +44,13 @@ void b_putData(const u16 data_) {
         *item = data_;
         smp_wmb();
         buff.head = (head + 1) & (BUFF_SIZE - 1);
-        wake_up(&WaitQ);
-        unlocked_ = true;
     } else {
         // #TODO: if the buffer is overflow? Send some signal to a board!
     }
     spin_unlock(&producer_lock);
 }
 
-u16 b_getData(void) {
+bool b_getData(u16* data) {
 	u16 data_ = 0;
 	u16* item;
     u32 head = ACCESS_ONCE(buff.head);
@@ -66,10 +61,9 @@ u16 b_getData(void) {
         data_ = *item;
         smp_mb();
         buff.tail = (tail + 1) & (BUFF_SIZE - 1);
-        return data_;
+        *data = data_;
+        return true;
     } else {
-    	unlocked_ = false;
-    	wait_event(WaitQ, unlocked_);
-    	return b_getData();
+        return false;
     }
 }

@@ -25,7 +25,7 @@
 #define PULL_DWN                   0x2          // pull-down mode
 #define EINT_P_ADG                 0x0          // positive adge mode
 #define PH_PULL0                   0x118        // IRQ_RSP pull register
-#define DATA_MASK                  0x3FF        // bitmask 0b1111111111
+#define DATA_MASK                  0x7FF        // bitmask 0b11111111111
 
 #define IRQ_                       60           // interrupt number in the global table
 #define PIO_INT_CFG1               0x204        // PIO interrupt configure register
@@ -133,8 +133,8 @@ void stopReading(void) {
     freeBuff();
 }
 
-u16 getData(void) {
-    return b_getData();
+bool getData(u16* data) {
+    return b_getData(data);
 }
 
 static irqreturn_t intr_handler(int irq, void *dev_id) {

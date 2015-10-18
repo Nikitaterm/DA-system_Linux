@@ -1,4 +1,4 @@
-export KERNELDIR = /home/nikita/Cubieboard2/linux-sunxi/
+export KERNELDIR = /home/nikita/Cubieboard2_CB3/linux-sunxi
 
 make: build_driver
 	@echo "*****Build completed successfully!*****"

@@ -62,7 +62,9 @@ void Plotter::stop() {
 
 void Plotter::readFromFile() {
     u_int16_t data;
-    while(ro_data_file->read(reinterpret_cast<char*>(&data), sizeof(data)) == -1);    //TODO: remove while
+    while(ro_data_file->read(reinterpret_cast<char*>(&data), sizeof(data)) == -1) {  //TODO: remove while and sleep here!
+        thread()->msleep(10);
+    }
     test.write(reinterpret_cast<char*>(&data), 2);
     test.flush();
     if (draw_queue.size() == 1000) {

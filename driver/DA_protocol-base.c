@@ -37,9 +37,11 @@ static ssize_t dev_read(struct file * file, char * buf,
     if( count < BUFF_LEN ) return -EINVAL;
     if( *ppos != 0 ) {
         printk("DA_driver: dev_read failed, file_pos != 0 (%d != 0).\n", (int)*ppos);
+        return -EINVAL;
+    }
+    if (!getData(&data)) {
         return 0;
     }
-    data = getData();
     info_str = (char*)(&data);
     if(copy_to_user(buf, info_str, BUFF_LEN) ) {
         return -EINVAL;

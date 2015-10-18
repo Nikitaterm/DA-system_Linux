@@ -38,13 +38,21 @@ void DataReader::closeDevice() const {
 }
 
 bool DataReader::getData() const {    // TODO: maybe it's possible to do it faster?
-    u_int16_t buff;
-    if (device_file->read(reinterpret_cast<char*>(&buff), sizeof(buff)) != sizeof(buff)) {  // TODO: why not to get 4 bytes?
-        return false;   // TODO: you know about an error here =)
+    u_int16_t buff = 0;
+    qint64 ret = 0;
+    do {
+        ret = device_file->read(reinterpret_cast<char*>(&buff), sizeof(buff)); // TODO: why not to get 4 bytes?
+        if (ret == 0) {
+            thread()->msleep(10);   // TODO: remove sleep and while?
+        } else if (ret != sizeof(buff)) {
+            return false;
+        }
+    } while(ret == 0 && isActive());
+    if (isActive()) {
+        if (data_file->write(reinterpret_cast<char*>(&buff), sizeof(buff)) != sizeof(buff)) {
+            return false;
+        }
+        data_file->flush();
     }
-    if (data_file->write(reinterpret_cast<char*>(&buff), sizeof(buff)) != sizeof(buff)) {
-        return false;
-    }
-    data_file->flush();
     return true;
 }

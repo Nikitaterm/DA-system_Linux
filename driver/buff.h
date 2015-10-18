@@ -5,7 +5,7 @@
 
 int initBuff(void);              // init the buffer with capacity = size
 void b_putData(const u16 data);  // put data into the head
-u16 b_getData(void);             // read data from the tail
+bool b_getData(u16* data);       // read data from the tail
 void freeBuff(void);             // clean the buffer and free allocated memory
 
 #endif

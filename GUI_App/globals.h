@@ -9,6 +9,6 @@
 #define DATA_FILE_EXT ".raw"
 
 // Plotting parameters
-static constexpr unsigned kPlotDelay = 100;
+static constexpr unsigned kPlotDelay = 500;
 
 #endif // GLOBALS_H
