@@ -46,6 +46,7 @@ void b_putData(const u16 data_) {
         buff.head = (head + 1) & (BUFF_SIZE - 1);
     } else {
         // #TODO: if the buffer is overflow? Send some signal to a board!
+        printk("DA_driver: Buffer overflow!\n");
     }
     spin_unlock(&producer_lock);
 }

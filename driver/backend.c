@@ -7,12 +7,12 @@
 #include <linux/irqreturn.h>
 #include <linux/kernel.h>
 
-#define PIO_BASE_                  0x01C20800   // PIO base address
+#define PIO_BASE_                  0x01C20800   // PIO base address     // TODO: rename according with the documentation.
 
 #define PG_DAT                     0xE8         // DATABUS data register
 #define DATABUS_DATA_SIZE          2
 #define PG_CFG0                    0xD8         // DATABUS configure register
-#define DATABUS_CONF_SIZE          5
+#define DATABUS_CONF_SIZE          6
 #define PG_PULL0                   0xF4         // DATABUS pull register
 #define DATABUS_PULLUP_SIZE        3
 
@@ -30,10 +30,12 @@
 #define IRQ_                       60           // interrupt number in the global table
 #define PIO_INT_CFG1               0x204        // PIO interrupt configure register
 #define PIO_INT_CTL                0x210        // PIO interrupt control register
-#define PIO_INT_STATUS             0x214        // POI interrupt status register
+#define PIO_INT_STATUS             0x214        // PIO interrupt status register
+#define IRQ_DEBOUNCE_REG           0x218        // PIO interrupt debounce register
+#define PIO_INT_CLK_SELECT         0x00         // PIO interrupt clock select
 
 #define MSK_11                     0x7FF        // bit-mask 0b11111111111
-#define MSK_4                      0xF          // bit-mask 0b1111
+#define MSK_4                      0xF          // bit-mask 0b1111          // TODO: rename according with the documentation.
 #define MSK_3                      0x7          // bit-mask 0b111
 #define MSK_2                      0x3          // bit-mask 0b11
 
@@ -64,10 +66,10 @@ int configure_DATABUS(void) {
     err = request_GPIO(PG_PULL0, DATABUS_PULLUP_SIZE);
     if (err) goto ERR;
     iowrite32(0, gpio_map + PG_CFG0);  // set as input
-    iowrite8(0, gpio_map + PG_CFG0 + 0x20);  // set as input
+    iowrite16(0, gpio_map + PG_CFG0 + 0x20);  // set as input
     conf = ioread32(gpio_map + PG_PULL0);
     conf &= (MSK_11 << 20);  // zero out bits
-    conf |= 0xAAAAA;  // set as pull down ([10] mode)
+    conf |= 0x2AAAAA;  // set as pull down ([10] mode)
     iowrite32(conf, gpio_map + PG_PULL0);
     return 0;
     ERR: return err;
@@ -94,6 +96,11 @@ int configure_IRQ_RSP(void) {
     conf = ioread32(gpio_map +PIO_INT_CFG1);
     conf = (conf & ~(MSK_4 << 24)) | (EINT_P_ADG << 24);  // set positive adge
     iowrite32(conf, gpio_map + PIO_INT_CFG1);
+
+    conf = ioread32(gpio_map +IRQ_DEBOUNCE_REG);
+    conf |= (1 << PIO_INT_CLK_SELECT);  // set 24Mgz interrupt rate
+    iowrite32(conf, gpio_map + IRQ_DEBOUNCE_REG);
+
     return 0;
     ERR: return err;
 }
